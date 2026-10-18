@@ -29,9 +29,10 @@ extern "C" JNIEXPORT void JNICALL Java_dev_picori_tmc_SecondScreenView_nativeTap
     Port_SecondScreen_OnTap(x, y, longPress ? 1 : 0);
 }
 
-/* Which display the game activity itself came up on — the shell knows, the
- * panel's settings row needs it to tell "swap screens" apart from "swap
- * screens, once you restart". Reported once, from the manager's ctor. */
+/* Whether SDL's game surface is on a secondary display. The Java host
+ * reports the applied layout so the panel can distinguish "swap screens"
+ * from "swap screens, once you restart". The Activity may stay on the main
+ * display while SDL uses a Presentation. */
 extern "C" JNIEXPORT void JNICALL Java_dev_picori_tmc_SecondScreenManager_nativeSetGameOnSecondaryDisplay(
     JNIEnv* /*env*/, jobject /*thiz*/, jboolean onSecondary) {
     Port_SecondScreen_SetGameOnSecondaryDisplay(onSecondary ? 1 : 0);

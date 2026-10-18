@@ -16,12 +16,11 @@ import android.view.SurfaceView;
  *
  * The view is kept apart from its host because the host varies: normally
  * the panel lives in a {@link SecondScreenPresentation} on the secondary
- * display, but with "swap screens" on the game takes that display and the
- * panel is hosted by {@link SecondScreenActivity} on the main one instead.
- * Only the window setup differs between the two — the surface handoff and
- * the tap forwarding below are the same either way, and there is only ever
- * one of these alive at a time, so native sees the same single surface
- * come and go however it was hosted.
+ * display. With "swap screens" on, {@link TMCActivity} hosts it directly in
+ * its lower/default window while SDL uses an upper Presentation. The legacy
+ * {@link SecondScreenActivity} host also remains available for externally
+ * launched secondary-display Activities. The surface handoff and touch
+ * forwarding are shared, and only one of these views is alive at a time.
  */
 class SecondScreenView extends SurfaceView {
     private static final long LONG_PRESS_MS = 350;

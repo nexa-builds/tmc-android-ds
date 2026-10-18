@@ -7,14 +7,11 @@ import android.util.Log;
 import android.view.WindowManager;
 
 /**
- * Hosts the panel ({@link SecondScreenView}) on the device's MAIN display
- * for the swapped layout, i.e. when the game itself was launched onto the
- * secondary display ("swap screens" in the panel's settings, applied by
- * {@link TMCLauncherActivity} at launch).
- *
- * A Presentation can't do this job: the framework refuses presentation
- * windows on DEFAULT_DISPLAY (InvalidDisplayException), so the swapped
- * layout needs a real activity on that display.
+ * Fallback panel host when an external launcher places the whole game
+ * Activity on a secondary display. A Presentation cannot host the panel on
+ * DEFAULT_DISPLAY, so that case needs a real Activity. The normal swapped
+ * layout does not use this class: {@link TMCActivity} keeps the companion in
+ * its own main-display layout and puts only SDL in a Presentation.
  */
 public class SecondScreenActivity extends Activity {
     private static final String TAG = "SecondScreenActivity";

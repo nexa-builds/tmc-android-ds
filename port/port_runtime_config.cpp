@@ -164,14 +164,10 @@ bool sSecondScreenFloorReturn = true;
 /* Which dressing the panel paints behind everything (an SS_BACKDROP_*
  * style id). 0 = the pause menu's parchment, i.e. the original look. */
 int sSecondScreenBackdrop = 0;
-/* Swap the two screens: with this on, the Android shell launches the game
- * activity onto the secondary display and hosts the panel on the main one.
- * Read by the Java launcher (TMCLauncherActivity) straight out of
- * config.json before the game process gets a window, so it only takes
- * effect at the NEXT launch — SDL's Android backend syncs a window's
- * system-bar/immersive state from the flags of the SDL_CreateWindow call
- * that made it, so moving the game between displays live is not a thing
- * this port can do without recreating that window. Default off. */
+/* Swap the two screens: SDL uses a secondary-display Presentation while
+ * the Activity and companion stay on the main display. The Java shell reads
+ * config.json before SDL creates its surface, so a change takes effect at
+ * the NEXT launch. Default off. */
 bool sSecondScreenSwap = false;
 /* Hide the game's own HUD on the top screen while the second screen shows
  * vitals — the engine-side gate lives with DrawUIElements. Default off. */

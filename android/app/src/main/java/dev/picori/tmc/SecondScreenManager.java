@@ -21,11 +21,11 @@ import android.view.Display;
  * the activity's own lifecycle changes — and re-shown if the system ever
  * dismisses it behind our back.
  *
- * With "swap screens" on, {@link TMCLauncherActivity} has already launched
- * the game onto that secondary display, so the panel goes to the MAIN
- * display instead. A Presentation is not allowed there (the framework
- * refuses presentation windows on DEFAULT_DISPLAY), so that case is hosted
- * by {@link SecondScreenActivity}.
+ * The swapped layout is hosted directly by {@link TMCActivity}: SDL uses a
+ * Presentation and the companion stays in the Activity. This manager is not
+ * used in that mode. If another launcher places the whole game Activity on a
+ * secondary display, retain the {@link SecondScreenActivity} fallback for the
+ * main panel, where the framework does not allow a Presentation.
  */
 public class SecondScreenManager implements DisplayManager.DisplayListener {
     private static final String TAG = "SecondScreenManager";
@@ -47,12 +47,9 @@ public class SecondScreenManager implements DisplayManager.DisplayListener {
         mContext = activity.getApplicationContext();
         mDisplayManager = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
         mGameDisplayId = activity.getWindowManager().getDefaultDisplay().getDisplayId();
-        // Tell native which way round the screens actually ended up. The
-        // launcher asks for a display; firmware is free to refuse and hand
-        // back a normal launch, so this is the only honest answer, and the
-        // panel's "swap screens" row needs it to know whether to read ON/OFF
-        // or RESTART. Safe here: SDLActivity.onCreate has already loaded
-        // libmain.so by the time this object is constructed.
+        // This manager is used when SDL stays in the Activity, so their
+        // display IDs match. Report the actual layout for the panel's
+        // ON/OFF/RESTART indicator. SDLActivity has already loaded libmain.so.
         nativeSetGameOnSecondaryDisplay(mGameDisplayId != Display.DEFAULT_DISPLAY);
         Log.i(TAG, "game window is on display " + mGameDisplayId);
     }
@@ -201,5 +198,5 @@ public class SecondScreenManager implements DisplayManager.DisplayListener {
         // can change while attached (not expected on Thor's fixed hardware).
     }
 
-    private static native void nativeSetGameOnSecondaryDisplay(boolean onSecondary);
+    static native void nativeSetGameOnSecondaryDisplay(boolean onSecondary);
 }

@@ -1821,8 +1821,8 @@ static int BackdropStyleCfg(void) {
  * wired to nothing outside their build: WIDESCREEN's wide render paths are
  * compiled in by --widescreen_width (at the native 240 the config flag
  * exists but nothing reads it), and SWAP SCREENS is applied by the Android
- * shell's launcher, so off Android there is nothing to apply it. Returns
- * how many were written. */
+ * shell before SDL surface creation, so off Android there is nothing to
+ * apply it. Returns how many were written. */
 static int VisibleSettingRows(uint8_t* out) {
     int n = 0;
     for (int i = 0; i < SS_SET_COUNT; i++) {

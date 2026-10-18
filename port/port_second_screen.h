@@ -72,14 +72,11 @@ int Port_SecondScreen_HasSurface(void);
  * harness can drive the same layout the device shows. */
 void Port_SecondScreen_OnTap(int x, int y, int longPress);
 
-/* Which way round the two screens ended up this launch: nonzero when the
- * game's own window is on a secondary display and this panel therefore
- * owns the main one (the "swap screens" setting, applied by the Android
- * shell at launch — see SecondScreenManager.java, which reports the game's
- * display here as soon as it knows it). The settings row compares this
- * against the persisted flag to decide whether it can honestly say ON/OFF
- * or has to say RESTART: the display the shell asked for is not always the
- * display it got, since firmware may refuse a launch there outright. */
+/* Applied Android layout: nonzero when SDL's game surface is on a secondary
+ * display and the companion owns the main one. TMCActivity or
+ * SecondScreenManager reports the actual layout after choosing its host.
+ * The settings row compares it with the saved flag to show ON/OFF or
+ * RESTART when a requested layout could not be applied. */
 void Port_SecondScreen_SetGameOnSecondaryDisplay(int onSecondary);
 int Port_SecondScreen_GameOnSecondaryDisplay(void);
 

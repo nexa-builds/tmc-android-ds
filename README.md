@@ -37,6 +37,40 @@ in this repository.
 Built for the Thor, but it is a plain Android `Presentation` — any device with
 a second display will do.
 
+## GammaOS Nano / Anbernic RG DS Plus
+
+In the app's GammaOS **Options** menu (X), enable **Run on Primary Screen**
+and leave **Dual-Stack Display** off. Launch from GammaOS's UI;
+`adb shell am start` does not reproduce its display routing.
+
+Enable **SWAP SCREENS** in the companion panel's SETTINGS, then fully close
+and relaunch the app. The tested configuration for this device is:
+
+```json
+{
+  "second_screen_swap": true,
+  "bg_fill": "black",
+  "render_backend": "auto"
+}
+```
+
+If Settings is unreachable, merge these fields into the existing
+`Android/data/dev.picori.tmc/files/config.json` while the app is closed.
+Preserve other settings and the file's app ownership/permissions: an unreadable
+config makes the shell and native port fall back to defaults.
+
+Keep the renderer on **Auto** with the current native build. The tested path
+falls back to SDL_Renderer's OpenGL ES backend; forcing **Software** reproduced
+an EGL/BLAST startup stall. Black background fill avoids duplicated image strips
+in the letterbox area while preserving the game's aspect ratio.
+
+The swapped layout keeps the Activity and touch companion on the lower/default
+display, creates SDL's surface in an upper-screen `Presentation`, and forwards
+controller input from the Activity to SDL. This follows the Zelda3 Android
+port's GammaOS arrangement and does not require Vulkan. With SWAP SCREENS off,
+the original Thor layout is retained. If no single powered presentation display
+is available, the app falls back to that layout.
+
 ## ROM regions
 
 The native port detects the region from the ROM header and switches its data

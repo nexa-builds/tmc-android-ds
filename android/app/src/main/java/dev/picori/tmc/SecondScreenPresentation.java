@@ -12,9 +12,9 @@ import android.widget.FrameLayout;
  * Hosts the game's second-screen panel ({@link SecondScreenView}) on Thor's
  * secondary display, which is the normal way round: the game owns the main
  * screen and this Presentation owns the panel below it. With "swap screens"
- * on the roles trade places and {@link SecondScreenActivity} hosts the same
- * view on the main display instead — a Presentation cannot do that job, the
- * framework refuses presentation windows on DEFAULT_DISPLAY.
+ * on, {@link TMCActivity} instead hosts SDL in a Presentation and puts the
+ * companion directly in its main-display layout. The framework does not allow
+ * a Presentation on DEFAULT_DISPLAY.
  */
 public class SecondScreenPresentation extends Presentation {
     public SecondScreenPresentation(Context outerContext, Display display) {
