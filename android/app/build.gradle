@@ -19,6 +19,21 @@ while (vparts.size() < 4) vparts << 0
 def tmcVersionCode = Math.max(1,
     vparts[0] * 1000000 + vparts[1] * 10000 + vparts[2] * 100 + vparts[3])
 
+// CI derives these overrides from the release tag; local builds keep the
+// native project version. Preserve the existing versionCode encoding.
+def apkVersionName = providers.gradleProperty("tmcVersionName").getOrElse(tmcVersion)
+def apkVersionCode = tmcVersionCode
+def versionCodeOverride = providers.gradleProperty("tmcVersionCode").orNull
+if (versionCodeOverride != null) {
+    if (!versionCodeOverride.isInteger()) {
+        throw new GradleException("tmcVersionCode must be a positive Android versionCode")
+    }
+    apkVersionCode = versionCodeOverride.toInteger()
+    if (apkVersionCode < 1 || apkVersionCode > 2100000000) {
+        throw new GradleException("tmcVersionCode is outside the Android versionCode range")
+    }
+}
+
 android {
     namespace "dev.picori.tmc"
     compileSdk 34
@@ -28,8 +43,8 @@ android {
         // SDL3 requires API 21+; the native lib is built for android-21.
         minSdk 21
         targetSdk 34
-        versionCode tmcVersionCode
-        versionName tmcVersion
+        versionCode apkVersionCode
+        versionName apkVersionName
         // ABIs come from whatever xmake produced into ../build/android/<abi>/
         // (see jniLibs sourceSets below) — no externalNativeBuild: the native
         // lib is built by xmake, Gradle only packages it.

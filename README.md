@@ -27,9 +27,9 @@ in this repository.
 
 ## Install
 
-1. Download the APK from the [Releases page](https://github.com/samyost1/tmc-android/releases)
-   and install it. It is debug-signed, so Android will warn about an unknown
-   developer.
+1. Download the APK from this repository's [Releases page](../../releases)
+   and install it. Android may ask you to allow installation from your browser
+   or file manager.
 2. Put your own `baserom.gba` (USA, SHA-1 `b4bd50e4131b027c334547b4524e2dbbd4227130`)
    in `Android/data/dev.picori.tmc/files/` on internal storage.
 3. Launch. The panel appears on the second display automatically.
@@ -128,6 +128,38 @@ The build does this for you when it can and otherwise stops with these
 instructions, rather than failing on a missing `assets/map_offsets.h`.
 
 For the desktop port, see [`INSTALL.md`](INSTALL.md).
+
+## GitHub Actions builds and releases
+
+The single **Release** workflow (`.github/workflows/release.yaml`) builds fresh
+native libraries for `arm64-v8a` and `x86_64` with xmake, then packages the
+normal `dev.picori.tmc` release APK with Gradle. It needs no ROM, and the APK
+never contains game data or signing keys.
+
+- **Release:** push a version tag such as `v1.3`. The workflow verifies the
+  APK's signature, package ID and both native ABIs before attaching it to a
+  GitHub Release.
+- **Manual build:** run the workflow from the Actions tab. An optional version
+  overrides the APK version name; otherwise it uses `0.0.0-dev.<run>`. Manual
+  runs upload an artifact and do not publish a release.
+
+For upgrade-stable signing, configure these repository or organization Actions
+secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `KEYSTORE_BASE64` | Base64-encoded release keystore |
+| `KEYSTORE_PASSWORD` | Keystore password |
+| `KEY_ALIAS` | Signing-key alias |
+| `KEY_PASSWORD` | Key password |
+
+Keep the same signing key for every update, and never commit the keystore or
+its passwords. Without the secrets the workflow still builds, but the APK is
+debug-signed and not upgrade-stable across runners.
+
+APK `versionCode` uses the existing
+`major*1000000 + minor*10000 + patch*100 + revision` scheme, so versions stay
+monotonic with the values already shipped.
 
 ## Built on
 
