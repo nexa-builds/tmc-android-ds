@@ -135,13 +135,13 @@ For the desktop port, see [`INSTALL.md`](INSTALL.md).
 
 ## GitHub Actions builds and releases
 
-The single **Release** workflow (`.github/workflows/release.yaml`) builds fresh
-native libraries for `arm64-v8a` and `x86_64` with xmake, then packages the
+The single **Release** workflow (`.github/workflows/release.yaml`) builds a fresh
+`arm64-v8a` native library with xmake, strips its debug info, then packages the
 normal `dev.picori.tmc` release APK with Gradle. It needs no ROM, and the APK
 never contains game data or signing keys.
 
-- **Release:** push a version tag such as `v1.3`. The workflow verifies the
-  APK's signature, package ID and both native ABIs before attaching it to a
+- **Release:** push a version tag such as `v1.3.1`. The workflow verifies the
+  APK's signature, package ID and the arm64-v8a library before attaching it to a
   GitHub Release.
 - **Manual build:** run the workflow from the Actions tab. An optional version
   overrides the APK version name; otherwise it uses `0.0.0-dev.<run>`. Manual

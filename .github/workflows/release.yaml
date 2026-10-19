@@ -80,18 +80,33 @@ jobs:
           package-cache-key: android-apk
           project-path: '.'
 
-      - name: Build libmain.so (arm64-v8a + x86_64)
+      - name: Build libmain.so (arm64-v8a) and strip debug info
         shell: bash
         run: |
           # Multi-region fat build, 384px widescreen baseline — the on-device
-          # default. Each ABI drops its lib into build/android/<abi>/ where
-          # Gradle's jniLibs looks.
+          # default. The lib drops into build/android/<abi>/ where Gradle's
+          # jniLibs looks.
+          #
+          # Releases are arm64-v8a only: that is every supported handheld, and
+          # the x86_64 slice only served emulators while doubling the APK.
+          # tmc_pc keeps symbols in release (xmake `set_strip("none")`) so local
+          # SIGSEGV traces stay useful; strip here so the published APK doesn't
+          # carry ~40 MB of debug info. Native libs are packaged uncompressed
+          # for 16 KB page alignment, so zip can't hide the symbols.
           NDK="$ANDROID_SDK_ROOT/ndk/26.3.11579264"
-          for abi in arm64-v8a x86_64; do
+          STRIP="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+          for abi in arm64-v8a; do
             xmake f -y -p android -a "$abi" --ndk="$NDK" \
               --game_version=USA --widescreen_width=384
             xmake build -y tmc_pc
             test -f "build/android/$abi/libmain.so"
+            "$STRIP" --strip-unneeded "build/android/$abi/libmain.so"
+            size=$(stat -c %s "build/android/$abi/libmain.so")
+            if [ "$size" -gt 30000000 ]; then
+              echo "::error::build/android/$abi/libmain.so is $size bytes after strip; debug info may not have been removed."
+              exit 1
+            fi
+            echo "$abi/libmain.so: $size bytes (stripped)"
           done
 
       - name: Configure signing
@@ -151,12 +166,15 @@ jobs:
           "$BT/apksigner" verify --print-certs "$APK"
           "$BT/aapt" dump badging "$APK" | grep -q "package: name='dev.picori.tmc'"
           unzip -l "$APK" | grep -q 'lib/arm64-v8a/libmain.so'
-          unzip -l "$APK" | grep -q 'lib/x86_64/libmain.so'
+          if unzip -l "$APK" | grep -q 'lib/x86_64/'; then
+            echo "::error::Release APK must be arm64-v8a only."
+            exit 1
+          fi
           if unzip -l "$APK" | grep -Eq '\.gba$|\.jks$|\.keystore$'; then
             echo "::error::APK must not contain a ROM or signing key."
             exit 1
           fi
-          echo "OK: signed dev.picori.tmc APK carrying both ABIs."
+          echo "OK: signed dev.picori.tmc APK (arm64-v8a)."
 
       - name: Collect APK
         run: |
