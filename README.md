@@ -45,30 +45,28 @@ a second display will do.
 
 ## GammaOS Nano / Anbernic RG DS Plus
 
-In the app's GammaOS **Options** menu (X), enable **Run on Primary Screen**
-and leave **Dual-Stack Display** off. Launch from GammaOS's UI;
-`adb shell am start` does not reproduce its display routing.
+This build targets the GammaOS Nano dual-screen handhelds and works with no
+manual configuration. In the app's GammaOS **Options** menu (X), enable
+**Run on Primary Screen** and leave **Dual-Stack Display** off, then launch
+from GammaOS's UI. (`adb shell am start` does not reproduce its display
+routing.)
 
-Enable **SWAP SCREENS** in the companion panel's SETTINGS, then fully close
-and relaunch the app. The tested configuration for this device is:
+Out of the box the app runs the GammaOS layout: the game owns the upper
+panel, the companion panel stays in the Activity on the lower one, and
+controller input is forwarded to the game.
 
-```json
-{
-  "second_screen_swap": true,
-  "bg_fill": "black",
-  "render_backend": "auto"
-}
-```
+The defaults behind that are set for this hardware in `port_runtime_config.cpp`:
 
-If Settings is unreachable, merge these fields into the existing
-`Android/data/dev.picori.tmc/files/config.json` while the app is closed.
-Preserve other settings and the file's app ownership/permissions: an unreadable
-config makes the shell and native port fall back to defaults.
+| Setting | Default | Why |
+| --- | --- | --- |
+| `second_screen_swap` | `true` | Puts the game on the upper panel. The other arrangement stalls on this device. |
+| `render_backend` | `auto` | Falls back to SDL_Renderer/OpenGL ES, which presents correctly. Forcing `software` stalls the display buffer queue and freezes the game at startup. |
+| `bg_fill` | `black` | The stretched ambient fill shows duplicated image strips on these panels. |
 
-Keep the renderer on **Auto** with the current native build. The tested path
-falls back to SDL_Renderer's OpenGL ES backend; forcing **Software** reproduced
-an EGL/BLAST startup stall. Black background fill avoids duplicated image strips
-in the letterbox area while preserving the game's aspect ratio.
+All three are still editable in the panel's SETTINGS or `config.json`. If you
+edit `config.json` by hand while the app is closed, preserve the file's app
+ownership/permissions: an unreadable config makes the shell and native port
+fall back to defaults.
 
 The swapped layout keeps the Activity and touch companion on the lower/default
 display, creates SDL's surface in an upper-screen `Presentation`, and forwards

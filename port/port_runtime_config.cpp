@@ -121,30 +121,39 @@ bool sShowFps = false;
 bool sTouchControls = true;
 int sPreferredRegion = -1;
 int sPreferredLanguage = -1;
+/* Platform defaults shared by the compile-time statics, DefaultsJson() and
+ * the apply() fallbacks, so a pre-config start, a written default and a
+ * missing key all agree.
+ *
+ * Android targets the dual-screen GammaOS handhelds: the game owns the
+ * secondary panel (SWAP SCREENS on) and black bars avoid the duplicated-image
+ * artefact the stretched ambient fill shows on these panels. */
+#ifdef __ANDROID__
+constexpr bool kDefaultSecondScreenSwap = true;
+constexpr PortBgFill kDefaultBgFill = PORT_BG_FILL_BLACK;
+const char* const kDefaultBgFillName = "black";
+#else
+constexpr bool kDefaultSecondScreenSwap = false;
+constexpr PortBgFill kDefaultBgFill = PORT_BG_FILL_BLURRED_FRAME;
+const char* const kDefaultBgFillName = "blurred";
+#endif
+/* Auto presents correctly everywhere: it falls back to SDL_Renderer when the
+ * GPU device is unavailable. The software path stalls the display buffer
+ * queue on the GammaOS panels, which freezes the game at startup. */
+constexpr PortRenderBackend kDefaultRenderBackend = PORT_RENDER_BACKEND_AUTO;
+const char* const kDefaultRenderBackendName = "auto";
+
 /* Widescreen pillarbox config — applied in port_ppu.cpp's present path.
  * The frame fills as much of the window as its aspect allows; whatever the
- * frame can't cover (title screen, one-screen 240px rooms) defaults to the
- * blurred ambient fill so no scene shows dead black bars. "black" restores
- * the historical plain-bars look. */
+ * frame can't cover (title screen, one-screen 240px rooms) takes the
+ * platform's default fill. */
 PortAspectMode sAspectMode = PORT_ASPECT_NATIVE_3_2;
-#ifdef __ANDROID__
-PortBgFill sBgFill = PORT_BG_FILL_BLACK; /* "blurred" reads as glitchy duplicated tiles on real widescreen panels */
-#else
-PortBgFill sBgFill = PORT_BG_FILL_BLURRED_FRAME;
-#endif
+PortBgFill sBgFill = kDefaultBgFill;
 u8 sBgFillR = 0, sBgFillG = 0, sBgFillB = 0;
 /* Renderer backend selection — read once at PPU init; menu writes
  * here but a restart is needed to apply because the window's
  * swapchain owner is set once and is not live-switchable. */
-#ifdef __ANDROID__
-/* "Auto" picks the SDL_GPU/Vulkan backend on capable Adreno GPUs (e.g. AYN
- * Thor), whose ImGui/swapchain path has an unresolved resize bug that leaves
- * everything past the pre-fullscreen window width unpainted. Force the
- * SDL_Renderer path until that's fixed upstream. */
-PortRenderBackend sRenderBackend = PORT_RENDER_BACKEND_SOFTWARE;
-#else
-PortRenderBackend sRenderBackend = PORT_RENDER_BACKEND_AUTO;
-#endif
+PortRenderBackend sRenderBackend = kDefaultRenderBackend;
 bool sTtsEnabled = true;
 float sTtsRate = 0.5f;
 float sTtsPitch = 0.5f;
@@ -167,8 +176,8 @@ int sSecondScreenBackdrop = 0;
 /* Swap the two screens: SDL uses a secondary-display Presentation while
  * the Activity and companion stay on the main display. The Java shell reads
  * config.json before SDL creates its surface, so a change takes effect at
- * the NEXT launch. Default off. */
-bool sSecondScreenSwap = false;
+ * the NEXT launch. On by default on Android, which is the GammaOS layout. */
+bool sSecondScreenSwap = kDefaultSecondScreenSwap;
 /* Hide the game's own HUD on the top screen while the second screen shows
  * vitals — the engine-side gate lives with DrawUIElements. Default off. */
 bool sHideTopHud = false;
@@ -333,7 +342,7 @@ const BoolCfg kBoolCfg[] = {
     { "second_screen_follow_cam", &sSecondScreenFollowCam, true },
     { "second_screen_windcrest_pins", &sSecondScreenCrestPins, true },
     { "second_screen_floor_auto_return", &sSecondScreenFloorReturn, true },
-    { "second_screen_swap", &sSecondScreenSwap, false },
+    { "second_screen_swap", &sSecondScreenSwap, kDefaultSecondScreenSwap },
     { "hide_top_hud", &sHideTopHud, false },
     { "practice_show_timer", &sPracticeShowTimer, false },
     { "practice_show_inputs", &sPracticeShowInputs, false },
@@ -419,17 +428,9 @@ nlohmann::json DefaultsJson(void) {
     j["autosave_interval_ms"] = 60000;
     j["touch_scheme"] = "joystick";
     j["aspect_mode"] = "native";
-#ifdef __ANDROID__
-    j["bg_fill"] = "black";
-#else
-    j["bg_fill"] = "blurred";
-#endif
+    j["bg_fill"] = kDefaultBgFillName;
     j["bg_fill_color"] = { 0, 0, 0 };
-#ifdef __ANDROID__
-    j["render_backend"] = "software";
-#else
-    j["render_backend"] = "auto";
-#endif
+    j["render_backend"] = kDefaultRenderBackendName;
     /* reborn_features is intentionally absent — its presence is the signal
      * to override the compile-time feature defaults. */
     j["bindings"] = nlohmann::json::object();
@@ -774,7 +775,7 @@ extern "C" void Port_Config_Load(const char* path) {
             else
                 sAspectMode = PORT_ASPECT_NATIVE_3_2;
 
-            std::string bf = j.value("bg_fill", std::string("blurred"));
+            std::string bf = j.value("bg_fill", std::string(kDefaultBgFillName));
             for (char& c : bf) {
                 if (c >= 'A' && c <= 'Z')
                     c = static_cast<char>(c - 'A' + 'a');
@@ -801,7 +802,7 @@ extern "C" void Port_Config_Load(const char* path) {
             }
         }
         {
-            std::string rb = j.value("render_backend", std::string("auto"));
+            std::string rb = j.value("render_backend", std::string(kDefaultRenderBackendName));
             for (char& c : rb) {
                 if (c >= 'A' && c <= 'Z')
                     c = static_cast<char>(c - 'A' + 'a');

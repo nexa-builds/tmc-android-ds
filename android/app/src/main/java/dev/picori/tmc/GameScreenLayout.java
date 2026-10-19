@@ -18,6 +18,8 @@ import java.nio.charset.StandardCharsets;
 final class GameScreenLayout {
     private static final String TAG = "GameScreenLayout";
     private static final int CONFIG_MAX_BYTES = 1 << 20;
+    /** Mirrors kDefaultSecondScreenSwap on Android: the GammaOS layout. */
+    private static final boolean DEFAULT_SWAP = true;
 
     private GameScreenLayout() {}
 
@@ -62,7 +64,17 @@ final class GameScreenLayout {
         return found;
     }
 
-    /** Same external-first config lookup as port_main.c; never rewrite it. */
+    /**
+     * Whether the GammaOS layout is wanted, defaulting to it.
+     *
+     * The native port writes config.json on its first run, which happens
+     * *after* this decision is made, so on a fresh install there is no file
+     * to read. Fall back to the same default the native side uses
+     * (kDefaultSecondScreenSwap in port_runtime_config.cpp) rather than to
+     * "off", or a first launch would come up in the other arrangement.
+     * An unreadable or unparsable config falls back the same way, because
+     * native then starts from its compile-time default too.
+     */
     private static boolean readSwapFlag(Context context) {
         File[] dirs = { context.getExternalFilesDir(null), context.getFilesDir() };
         for (File dir : dirs) {
@@ -74,19 +86,19 @@ final class GameScreenLayout {
                 continue;
             }
             if (!config.canRead()) {
-                Log.w(TAG, "Screen config is not readable by the app; keeping the default layout");
-                return false;
+                Log.w(TAG, "Screen config is not readable by the app; using the default layout");
+                return DEFAULT_SWAP;
             }
             try {
-                return new JSONObject(readText(config)).optBoolean("second_screen_swap", false);
+                return new JSONObject(readText(config)).optBoolean("second_screen_swap", DEFAULT_SWAP);
             } catch (IOException | org.json.JSONException e) {
                 // A parse exception can quote file contents. Log only the
                 // outcome, not the config or the exception message.
-                Log.w(TAG, "Could not read screen layout; keeping the default layout");
-                return false;
+                Log.w(TAG, "Could not read screen layout; using the default layout");
+                return DEFAULT_SWAP;
             }
         }
-        return false;
+        return DEFAULT_SWAP;
     }
 
     private static String readText(File file) throws IOException {
