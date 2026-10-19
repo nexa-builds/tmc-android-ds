@@ -18,17 +18,17 @@
         android:enableOnBackInvokedCallback="false"
         android:hardwareAccelerated="true">
 
-        <!-- Launcher trampoline. It only picks the display the game starts
-             on (the "swap screens" setting) and finishes; the game itself
-             is TMCActivity below. Which display a window belongs to is
-             fixed when the window is created, so this decision cannot be
-             made later from inside the game. -->
+        <!-- Launcher. On a fresh install no ROM has been imported yet, so
+             this shows the native "Select your ROM" screen and installs the
+             picked dump into the app's files dir before starting the game.
+             Once a ROM is present it starts TMCActivity directly. Keeping the
+             first-run prompt in Java (not the in-engine prelaunch) means a
+             fresh install never depends on the native UI coming up, and the
+             game Activity still owns the display routing below. -->
         <activity
-            android:name="dev.picori.tmc.TMCLauncherActivity"
+            android:name="dev.picori.tmc.TMCSetupActivity"
             android:label="@string/app_name"
             android:screenOrientation="sensorLandscape"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -30,9 +30,15 @@ in this repository.
 1. Download the APK from this repository's [Releases page](../../releases)
    and install it. Android may ask you to allow installation from your browser
    or file manager.
-2. Put your own `baserom.gba` (USA, SHA-1 `b4bd50e4131b027c334547b4524e2dbbd4227130`)
-   in `Android/data/dev.picori.tmc/files/` on internal storage.
-3. Launch. The panel appears on the second display automatically.
+2. Launch. On first run the app asks you to select your own `baserom.gba`
+   (USA, SHA-1 `b4bd50e4131b027c334547b4524e2dbbd4227130`) from anywhere on
+   the device. It's copied into `Android/data/dev.picori.tmc/files/` once, so
+   you're only asked the first time. EU, JP and the demo dumps are accepted
+   too — the port detects the region from the ROM header.
+3. The panel appears on the second display automatically.
+
+If you prefer, you can still place the ROM yourself: put `baserom.gba` in
+`Android/data/dev.picori.tmc/files/` on internal storage before launching.
 
 Built for the Thor, but it is a plain Android `Presentation` — any device with
 a second display will do.
